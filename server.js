@@ -19,6 +19,8 @@ const client = new pg.Client(process.env.DATABASE_URL);
 server.get('/', homeHandler)
 server.get('/getTasks', getTasksHandler)
 server.post('/addtask', addTasksHandler)
+server.get('/randomTask/:type',randomTask);
+
 server.get("*", defaultHandler)
 server.use(errorHandler)
 
@@ -37,6 +39,26 @@ function homeHandler(req, res) {
     errorHandler(error,req,res)
  }
 }
+function randomTask (req,res){
+    const {type}=req.params
+    const url =`http://www.boredapi.com/api/activity?type=${type}`
+    try{
+        axios.get(url)
+
+        .then(result=>{
+
+            res.send(result.data)
+        })
+        .catch((error)=>{
+            errorHandler(error,req,res)
+        })
+    }
+    catch (error){
+        errorHandler(error,req,res)
+    }
+}
+
+
 
 function getTasksHandler(req, res) {
     const sql = "SELECT * FROM GenTasks;";
