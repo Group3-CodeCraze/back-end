@@ -1,51 +1,66 @@
-'use strict';
-
-const express = require('express');
-const cors = require('cors');
-const server = express();
-require('dotenv').config();
-const pg = require('pg');
-const axios = require('axios');
-let PORT = process.env.PORT || 3000;
-const apiKey = process.env.APIkey;
-server.use(cors())
-server.use(express.json())
-
-const client = new pg.Client(process.env.DATABASE_URL)
+const express =require("express");
+const server =express();
+const cors = require("cors");
+const axios =require("axios");
+server.use(cors());
+require("dotenv").config();
+const pg = require("pg");
+server.use(express.json());
 
 
-
-server.get(`*`, defaultHandler);
-server.use(errorHandler);
+let PORT=process.env.PORT || 3000;
 
 
+const client =new pg.Client(process.env.DATABASE_URL) 
+server.get('/',homeHandler);
 
+server.get('/randomTask/:type',randomTask);
 
+function randomTask (req,res){
+    const {type}=req.params
+    const url =`http://www.boredapi.com/api/activity?type=${type}`
+    try{
+        axios.get(url)
 
+        .then(result=>{
 
-
-
-
-
-
-
-
-function defaultHandler(req, res) {
-    res.status(404).send('page not found')
-}; 
-
-function errorHandler(error, req, res) {
-    const err = {
-        status: 500,
-        message: error
+            res.send(result.data)
+        })
+        .catch((error)=>{
+            errorHandler(error,req,res)
+        })
     }
-    res.status(500).send(err);
+    catch (error){
+        errorHandler(error,req,res)
+    }
 }
 
-client.connect()
-    .then(() => {
-        server.listen(PORT, () => {
-            console.log(`listening on ${PORT} : YES, IAM Ready`)
-        })
 
-    })
+
+server.get("*",defaultHandler);
+
+
+server.use(errorHandler);
+
+function defaultHandler(req,res){
+    res.status(400).send(`default route`)
+};
+
+function homeHandler(req,res){
+    res.status(200).send(`HOME`)
+};
+
+function errorHandler(error,req,res){
+    const err ={
+        status:500,
+        errorMessages:error
+    }
+    res.send(err)
+};
+
+client.connect()
+.then(()=>{
+    server.listen(PORT,()=>{
+        console.log(`listening to ${PORT} i'm ready`)
+    });
+})
