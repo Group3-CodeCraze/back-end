@@ -1,21 +1,44 @@
-const express =require("express");
-const server =express();
-const cors = require("cors");
-const axios =require("axios");
+'use strict';
+
+const express = require('express');
+const server = express();
+const cors = require('cors');
+require('dotenv').config();
+const pg = require('pg');
+
 server.use(cors());
-require("dotenv").config();
-const pg = require("pg");
+const PORT = process.env.PORT || 3000;
+const axios = require('axios');
+
+
 server.use(express.json());
 
+const client = new pg.Client(process.env.DATABASE_URL);
 
-let PORT=process.env.PORT || 3000;
 
-
-const client =new pg.Client(process.env.DATABASE_URL) 
-server.get('/',homeHandler);
-
+server.get('/', homeHandler)
+server.get('/getTasks', getTasksHandler)
+server.post('/addtask', addTasksHandler)
 server.get('/randomTask/:type',randomTask);
 
+server.get("*", defaultHandler)
+server.use(errorHandler)
+
+function homeHandler(req, res) {
+ try{
+    const url = process.env.API_URL;
+    axios.get(url)
+        .then(resultdata => {
+            res.send(resultdata.data);
+        })
+        .catch((error) => {
+            res.status(500).send(error);
+        })
+ }
+ catch(error) {
+    errorHandler(error,req,res)
+ }
+}
 function randomTask (req,res){
     const {type}=req.params
     const url =`http://www.boredapi.com/api/activity?type=${type}`
@@ -37,30 +60,51 @@ function randomTask (req,res){
 
 
 
-server.get("*",defaultHandler);
+function getTasksHandler(req, res) {
+    const sql = "SELECT * FROM GenTasks;";
+    client.query(sql)
+        .then(data => {
+            res.send(data.rows);
+        })
+        .catch((error) => {
+            errorHandler(error, req, res);
+        })
+}
+
+function addTasksHandler(req, res) {
+    const taskValues = req.body;
+    const sql = `INSERT INTO GenTasks (task_type,due_date,activity,comments,is_completed)
+        VALUES ($1,$2,$3,$4,$5);`;
+    const Values = [taskValues.task_type, taskValues.due_date, taskValues.activity, taskValues.comments, taskValues.is_completed];
+    client.query(sql, Values)
+        .then(data => {
+            res.send("Data Added Successfully");
+        })
+        .catch((error) => {
+            errorHandler(error, req, res);
+        })
+}
 
 
-server.use(errorHandler);
-
-function defaultHandler(req,res){
-    res.status(400).send(`default route`)
+const status404 = {
+    "status": 404,
+    "responseText": "Sorry, page not found error"
 };
-
-function homeHandler(req,res){
-    res.status(200).send(`HOME`)
+function defaultHandler(req, res) {
+    res.status(404).send(status404);
 };
-
-function errorHandler(error,req,res){
-    const err ={
-        status:500,
-        errorMessages:error
+function errorHandler(error, req, res) {
+    const err = {
+        "status": 500,
+        "message": error
     }
-    res.send(err)
+    res.status(500).send(err);
 };
 
 client.connect()
-.then(()=>{
-    server.listen(PORT,()=>{
-        console.log(`listening to ${PORT} i'm ready`)
-    });
-})
+    .then(() => {
+        server.listen(PORT, () => {
+            console.log(`Server listening on port ${PORT}`);
+        })
+    })
+
