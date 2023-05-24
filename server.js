@@ -1,0 +1,88 @@
+'use strict';
+
+const express = require('express');
+const server = express();
+const cors = require('cors');
+require('dotenv').config();
+const pg = require('pg');
+
+server.use(cors());
+const PORT = process.env.PORT || 3000;
+const axios = require('axios');
+
+
+server.use(express.json());
+
+const client = new pg.Client(process.env.DATABASE_URL);
+
+
+server.get('/', homeHandler)
+server.get('/getTasks', getTasksHandler)
+server.post('/addtask', addTasksHandler)
+server.get("*", defaultHandler)
+server.use(errorHandler)
+
+function homeHandler(req, res) {
+ try{
+    const url = process.env.API_URL;
+    axios.get(url)
+        .then(resultdata => {
+            res.send(resultdata.data);
+        })
+        .catch((error) => {
+            res.status(500).send(error);
+        })
+ }
+ catch(error) {
+    errorHandler(error,req,res)
+ }
+}
+
+function getTasksHandler(req, res) {
+    const sql = "SELECT * FROM GenTasks;";
+    client.query(sql)
+        .then(data => {
+            res.send(data.rows);
+        })
+        .catch((error) => {
+            errorHandler(error, req, res);
+        })
+}
+
+function addTasksHandler(req, res) {
+    const taskValues = req.body;
+    const sql = `INSERT INTO GenTasks (task_type,due_date,activity,comments,is_completed)
+        VALUES ($1,$2,$3,$4,$5);`;
+    const Values = [taskValues.task_type, taskValues.due_date, taskValues.activity, taskValues.comments, taskValues.is_completed];
+    client.query(sql, Values)
+        .then(data => {
+            res.send("Data Added Successfully");
+        })
+        .catch((error) => {
+            errorHandler(error, req, res);
+        })
+}
+
+
+const status404 = {
+    "status": 404,
+    "responseText": "Sorry, page not found error"
+};
+function defaultHandler(req, res) {
+    res.status(404).send(status404);
+};
+function errorHandler(error, req, res) {
+    const err = {
+        "status": 500,
+        "message": error
+    }
+    res.status(500).send(err);
+};
+
+client.connect()
+    .then(() => {
+        server.listen(PORT, () => {
+            console.log(`Server listening on port ${PORT}`);
+        })
+    })
+
