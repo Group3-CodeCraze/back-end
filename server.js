@@ -23,8 +23,8 @@ function randomTask (req,res){
         axios.get(url)
 
         .then(result=>{
-
             res.send(result.data)
+          
         })
         .catch((error)=>{
             errorHandler(error,req,res)
@@ -62,5 +62,6 @@ client.connect()
 .then(()=>{
     server.listen(PORT,()=>{
         console.log(`listening to ${PORT} i'm ready`)
+        
     });
 })
