@@ -18,12 +18,3 @@ CREATE TABLE IF NOT EXISTS users (
     password VARCHAR(255)
 );
 
-DROP TABLE IF EXISTS tasks;
-
-
-CREATE TABLE IF NOT EXISTS tasks (
-    id  SERIAL ,
-    content VARCHAR(255),
-    is_completed boolean
-
-);
