@@ -22,6 +22,10 @@ server.post('/addtask', addTasksHandler)
 server.get('/randomTask/:type', randomTask);
 server.post('/login', loginHandler)
 server.post('/signup', signUpHandler)
+server.put('/updateGenTasks/:id', updateGentasks);
+server.delete('/deleteTask/:id', deleteTask);
+
+
 
 server.get("*", defaultHandler)
 server.use(errorHandler)
@@ -125,7 +129,65 @@ function signUpHandler(req, res) {
         })
 
 }
+function updateGentasks(req, res) {
+    const { id } = req.params;
+    const sql = `UPDATE gentasks SET task_type = $1, due_date = $2, activity = $3, comments = $4, is_completed = $5 WHERE id=${id};`
 
+    const { task_type, due_date, activity, comments, is_completed } = req.body;
+    const values = [task_type, due_date, activity, comments, is_completed];
+
+    client.query(sql, values)
+        .then((data) => {
+            const sql = `SELECT * FROM gentasks;`;
+            client.query(sql)
+                .then(allData => {
+                    res.status(200).send(allData.rows)
+                })
+
+        })
+        .catch((error) => {
+            errorHandler(error, req, res)
+        })
+}
+function deleteTask(req, res) {
+    console.log("Task deleted");
+    const { id } = req.params;
+    const sql = `DELETE FROM gentasks WHERE id=${id}`
+    client.query(sql)
+        .then((data) => {
+            const sql = `SELECT * FROM gentasks;`;
+            client.query(sql)
+                .then(allData => {
+                    res.send(allData.rows)
+                })
+
+        })
+        .catch((error) => {
+            errorHandler(error, req, res)
+        })
+
+}
+/* function updateTasks(req, res) {
+    const { id } = req.params;
+    const sql = `UPDATE tasks SET content = $1 is_completed = $2 WHERE id=${id};`
+
+    const { content, is_completed } = req.body;
+    const values = [content, is_completed];
+
+    client.query(sql, values)
+        .then((data) => {
+            const sql = `SELECT * FROM tasks;`;
+            client.query(sql)
+                .then(allData => {
+                    res.status(200).send(allData.rows)
+                })
+
+        })
+        .catch((error) => {
+            errorHandler(error, req, res)
+        })
+}
+ */
 const status404 = {
     "status": 404,
     "responseText": "Sorry, page not found error"
