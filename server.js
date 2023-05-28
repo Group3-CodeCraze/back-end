@@ -16,45 +16,41 @@ server.use(express.json());
 const client = new pg.Client(process.env.DATABASE_URL);
 
 
-server.get('/', homeHandler)
-server.get('/getTasks', getTasksHandler)
+server.get('/home/:username', homeHandler)
+server.get('/gettasks', getTasksHandler)
 server.post('/addtask', addTasksHandler)
-server.get('/randomTask/:type',randomTask);
+server.get('/randomTask/:type', randomTask);
+server.post('/login', loginHandler)
+server.post('/signup', signUpHandler)
 
 server.get("*", defaultHandler)
 server.use(errorHandler)
 
 function homeHandler(req, res) {
- try{
-    const url = process.env.API_URL;
-    axios.get(url)
-        .then(resultdata => {
-            res.send(resultdata.data);
-        })
-        .catch((error) => {
-            res.status(500).send(error);
-        })
- }
- catch(error) {
-    errorHandler(error,req,res)
- }
+    try {
+        const { username } = req.params;
+        res.send({ username: username });
+    }
+    catch (error) {
+        errorHandler(error, req, res)
+    }
 }
-function randomTask (req,res){
-    const {type}=req.params
-    const url =`http://www.boredapi.com/api/activity?type=${type}`
-    try{
+function randomTask(req, res) {
+    const { type } = req.params
+    const url = `http://www.boredapi.com/api/activity?type=${type}`
+    try {
         axios.get(url)
 
-        .then(result=>{
+            .then(result => {
 
-            res.send(result.data)
-        })
-        .catch((error)=>{
-            errorHandler(error,req,res)
-        })
+                res.send(result.data)
+            })
+            .catch((error) => {
+                errorHandler(error, req, res)
+            })
     }
-    catch (error){
-        errorHandler(error,req,res)
+    catch (error) {
+        errorHandler(error, req, res)
     }
 }
 
@@ -84,7 +80,51 @@ function addTasksHandler(req, res) {
             errorHandler(error, req, res);
         })
 }
+function loginHandler(req, res) {
+    const { username, password } = req.body;
 
+    const sql = 'SELECT * FROM users WHERE username = $1 AND password = $2';
+    const values = [username, password];
+    client.query(sql, values)
+        .then(result => {
+            if (result.rowCount > 0) {
+                res.redirect('/home/' + username);
+            }
+            else {
+                res.send("login failed");
+            }
+        })
+        .catch((error) => {
+            console.log(error)
+        })
+}
+
+function signUpHandler(req, res) {
+    const { username, email, password } = req.body;
+    const sql = `SELECT * FROM users where username=$1;`;
+    const useernameValue = [username];
+    client.query(sql, useernameValue)
+        .then((exist) => {
+            if (exist.rowCount > 0) {
+                res.send("username already exist");
+            }
+            else {
+                const text = `INSERT INTO users (username, email, password) VALUES ($1, $2, $3);`;
+                const values = [username, email, password];
+                client.query(text, values)
+                    .then((result) => {
+                        res.send(`You Signed Up Successfully`);
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                    });
+            }
+        })
+        .catch((error) => {
+            console.log(error);
+        })
+
+}
 
 const status404 = {
     "status": 404,
