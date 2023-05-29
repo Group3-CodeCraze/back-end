@@ -61,7 +61,8 @@ function randomTask(req, res) {
 
 
 function getTasksHandler(req, res) {
-    const sql = "SELECT * FROM GenTasks;";
+    const{username}=req.query
+    const sql = `SELECT * FROM GenTasks WHERE username='${username}';`;
     client.query(sql)
         .then(data => {
             res.send(data.rows);
@@ -73,12 +74,13 @@ function getTasksHandler(req, res) {
 
 function addTasksHandler(req, res) {
     const taskValues = req.body;
-    const sql = `INSERT INTO GenTasks (task_type,due_date,activity,comments,is_completed)
-        VALUES ($1,$2,$3,$4,$5);`;
-    const Values = [taskValues.task_type, taskValues.due_date, taskValues.activity, taskValues.comments, taskValues.is_completed];
+    const sql = `INSERT INTO GenTasks (username,task_type,due_date,activity,comments,is_completed)
+        VALUES ($1,$2,$3,$4,$5,$6) ;`;
+    const Values = [taskValues.username,taskValues.task_type, taskValues.due_date, taskValues.activity, taskValues.comments, taskValues.is_completed];
     client.query(sql, Values)
         .then(data => {
-            res.send("Data Added Successfully");
+          res.send(data)
+          
         })
         .catch((error) => {
             errorHandler(error, req, res);
@@ -131,10 +133,10 @@ function signUpHandler(req, res) {
 }
 function updateGentasks(req, res) {
     const { id } = req.params;
-    const sql = `UPDATE gentasks SET task_type = $1, due_date = $2, activity = $3, comments = $4, is_completed = $5 WHERE id=${id};`
+    const sql = `UPDATE gentasks SET task_type = $1, due_date = $2, activity = $3, comments = $4 , is_completed = $5 , user_name=$6 WHERE id=${id};`
 
-    const { task_type, due_date, activity, comments, is_completed } = req.body;
-    const values = [task_type, due_date, activity, comments, is_completed];
+    const { task_type, due_date, activity, comments, is_completed, user_name } = req.body;
+    const values = [task_type, due_date, activity, comments, is_completed, user_name];
 
     client.query(sql, values)
         .then((data) => {
