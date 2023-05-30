@@ -77,8 +77,6 @@ function randomTask(req, res) {
 
 
 function getTasksHandler(req, res) {
-    const{username}=req.query
-    const sql = `SELECT * FROM GenTasks WHERE username='${username}';`;
     const { username } = req.query;
     const sql = `SELECT * FROM gentasks WHERE username = '${username}';`;
     client.query(sql)
