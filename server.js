@@ -157,11 +157,13 @@ function deleteTask(req, res) {
     const sql = `DELETE FROM gentasks WHERE id=${id}`
     client.query(sql)
         .then((data) => {
-            const sql = `SELECT * FROM gentasks;`;
-            client.query(sql)
-                .then(allData => {
-                    res.send(allData.rows)
-                })
+
+            res.send("ok")
+            // const sql = `SELECT * FROM gentasks;`;
+            // client.query(sql)
+            //     .then(allData => {
+            //         res.send(allData.rows)
+            //     })
 
         })
         .catch((error) => {
