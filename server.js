@@ -23,6 +23,7 @@ server.get('/randomTask/:type', randomTask);
 server.post('/login', loginHandler)
 server.post('/signup', signUpHandler)
 server.put('/updateGenTasks/:id', updateGentasks);
+server.put('/updateiscomplete/:id', updateIsCompletedHandler);
 server.delete('/deleteTask/:id', deleteTask);
 
 
@@ -133,10 +134,10 @@ function signUpHandler(req, res) {
 }
 function updateGentasks(req, res) {
     const { id } = req.params;
-    const sql = `UPDATE gentasks SET task_type = $1, due_date = $2, activity = $3, comments = $4 , is_completed = $5 , user_name=$6 WHERE id=${id};`
+    const sql = `UPDATE gentasks SET username=$1 ,task_type = $2, due_date = $3, activity = $4, comments = $5 , is_completed = $6 WHERE id=${id};`
 
-    const { task_type, due_date, activity, comments, is_completed, user_name } = req.body;
-    const values = [task_type, due_date, activity, comments, is_completed, user_name];
+    const { username,task_type, due_date, activity, comments, is_completed,  } = req.body;
+    const values = [ username,task_type, due_date, activity, comments, is_completed, ];
 
     client.query(sql, values)
         .then((data) => {
@@ -145,12 +146,34 @@ function updateGentasks(req, res) {
                 .then(allData => {
                     res.status(200).send(allData.rows)
                 })
-
         })
         .catch((error) => {
             errorHandler(error, req, res)
         })
 }
+
+function updateIsCompletedHandler(req, res) {
+    const { id } = req.params;
+    const sql = `UPDATE gentasks SET is_completed = $1 WHERE id=${id};`
+
+    const {  is_completed } = req.body;
+    const values = [  is_completed ];
+
+    client.query(sql, values)
+        .then((data) => {
+            const sql = `SELECT * FROM gentasks;`;
+            client.query(sql)
+                .then(allData => {
+                    res.status(200).send(allData.rows)
+                })
+        })
+        .catch((error) => {
+            errorHandler(error, req, res)
+        })
+}
+
+
+
 function deleteTask(req, res) {
     console.log("Task deleted");
     const { id } = req.params;
