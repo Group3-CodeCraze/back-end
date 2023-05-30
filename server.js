@@ -47,7 +47,7 @@ function homeHandler(req, res) {
 }
 function randomTask(req, res) {
     const { type } = req.params
-    const url = `http://www.boredapi.com/api/activity?type=${type}`
+    const url = process.env.API_URL + `?type=${type}`;
     try {
         axios.get(url)
 
