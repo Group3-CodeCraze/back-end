@@ -13,6 +13,12 @@ CREATE TABLE IF NOT EXISTS users (
 DROP TABLE IF EXISTS GenTasks;
 
 
+CREATE TABLE IF NOT EXISTS tasks (
+    id  SERIAL ,
+    content VARCHAR(255),
+    is_completed boolean
+
+
 CREATE TABLE IF NOT EXISTS GenTasks(
     id SERIAL PRIMARY KEY,
     username VARCHAR(25)  REFERENCES users(username),

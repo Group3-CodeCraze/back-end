@@ -46,6 +46,15 @@ function randomTask(req, res) {
     try {
         axios.get(url)
 
+
+        .then(result=>{
+            res.send(result.data)
+          
+        })
+        .catch((error)=>{
+            errorHandler(error,req,res)
+        })
+
             .then(result => {
 
                 res.send(result.data)
@@ -53,6 +62,7 @@ function randomTask(req, res) {
             .catch((error) => {
                 errorHandler(error, req, res)
             })
+
     }
     catch (error) {
         errorHandler(error, req, res)
@@ -209,12 +219,17 @@ function deleteTask(req, res) {
                     res.status(200).send(allData.rows)
                 })
 
+
+
+
+
         })
         .catch((error) => {
             errorHandler(error, req, res)
         })
 }
  */
+
 const status404 = {
     "status": 404,
     "responseText": "Sorry, page not found error"
@@ -231,9 +246,9 @@ function errorHandler(error, req, res) {
 };
 
 client.connect()
-    .then(() => {
-        server.listen(PORT, () => {
-            console.log(`Server listening on port ${PORT}`);
-        })
-    })
-
+.then(()=>{
+    server.listen(PORT,()=>{
+        console.log(`listening to ${PORT} i'm ready`)
+        
+    });
+})
