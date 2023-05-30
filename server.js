@@ -22,6 +22,8 @@ server.post('/addtask', addTasksHandler)
 server.get('/randomTask/:type', randomTask);
 server.post('/login', loginHandler)
 server.post('/signup', signUpHandler)
+server.put('/updateGenTasks/:id', updateGentasks);
+server.put('/updateiscomplete/:id', updateIsCompletedHandler);
 server.put('/updategentasks/:id', updategentasks);
 server.delete('/deleteTask/:id', deleteTask);
 server.get('/getCalendarDate/:username', getCalendarDateByUsernameHandler);
@@ -49,6 +51,15 @@ function randomTask(req, res) {
     try {
         axios.get(url)
 
+
+        .then(result=>{
+            res.send(result.data)
+          
+        })
+        .catch((error)=>{
+            errorHandler(error,req,res)
+        })
+
             .then(result => {
 
                 res.send(result.data)
@@ -56,6 +67,7 @@ function randomTask(req, res) {
             .catch((error) => {
                 errorHandler(error, req, res)
             })
+
     }
     catch (error) {
         errorHandler(error, req, res)
@@ -65,6 +77,8 @@ function randomTask(req, res) {
 
 
 function getTasksHandler(req, res) {
+    const{username}=req.query
+    const sql = `SELECT * FROM GenTasks WHERE username='${username}';`;
     const { username } = req.query;
     const sql = `SELECT * FROM gentasks WHERE username = '${username}';`;
     client.query(sql)
@@ -84,7 +98,8 @@ function addTasksHandler(req, res) {
     const Values = [taskValues.username,taskValues.task_type, taskValues.due_date, taskValues.activity, taskValues.comments, taskValues.is_completed];
     client.query(sql, Values)
         .then(data => {
-            res.send("Data Added Successfully");
+          res.send(data)
+          
         })
         .catch((error) => {
             errorHandler(error, req, res);
@@ -137,10 +152,10 @@ function signUpHandler(req, res) {
 }
 function updategentasks(req, res) {
     const { id } = req.params;
-    const sql = `UPDATE gentasks SET task_type = $1, due_date = $2, activity = $3, comments = $4, is_completed = $5 WHERE id=${id};`
+    const sql = `UPDATE gentasks SET username=$1 ,task_type = $2, due_date = $3, activity = $4, comments = $5 , is_completed = $6 WHERE id=${id};`
 
-    const { task_type, due_date, activity, comments, is_completed } = req.body;
-    const values = [task_type, due_date, activity, comments, is_completed];
+    const { username,task_type, due_date, activity, comments, is_completed,  } = req.body;
+    const values = [ username,task_type, due_date, activity, comments, is_completed, ];
 
     client.query(sql, values)
         .then((data) => {
@@ -149,23 +164,47 @@ function updategentasks(req, res) {
                 .then(allData => {
                     res.status(200).send(allData.rows)
                 })
-
         })
         .catch((error) => {
             errorHandler(error, req, res)
         })
 }
+
+function updateIsCompletedHandler(req, res) {
+    const { id } = req.params;
+    const sql = `UPDATE gentasks SET is_completed = $1 WHERE id=${id};`
+
+    const {  is_completed } = req.body;
+    const values = [  is_completed ];
+
+    client.query(sql, values)
+        .then((data) => {
+            const sql = `SELECT * FROM gentasks;`;
+            client.query(sql)
+                .then(allData => {
+                    res.status(200).send(allData.rows)
+                })
+        })
+        .catch((error) => {
+            errorHandler(error, req, res)
+        })
+}
+
+
+
 function deleteTask(req, res) {
     console.log("Task deleted");
     const { id } = req.params;
     const sql = `DELETE FROM gentasks WHERE id=${id}`
     client.query(sql)
         .then((data) => {
-            const sql = `SELECT * FROM gentasks;`;
-            client.query(sql)
-                .then(allData => {
-                    res.send(allData.rows)
-                })
+
+            res.send("ok")
+            // const sql = `SELECT * FROM gentasks;`;
+            // client.query(sql)
+            //     .then(allData => {
+            //         res.send(allData.rows)
+            //     })
 
         })
         .catch((error) => {
@@ -187,6 +226,10 @@ function deleteTask(req, res) {
                 .then(allData => {
                     res.status(200).send(allData.rows)
                 })
+
+
+
+
 
         })
         .catch((error) => {
@@ -224,6 +267,7 @@ function getCalendarDateByUsernameHandler(req, res) {
         errorHandler(error, req, res);
       });
   }
+
 const status404 = {
     "status": 404,
     "responseText": "Sorry, page not found error"
@@ -240,9 +284,9 @@ function errorHandler(error, req, res) {
 };
 
 client.connect()
-    .then(() => {
-        server.listen(PORT, () => {
-            console.log(`Server listening on port ${PORT}`);
-        })
-    })
-
+.then(()=>{
+    server.listen(PORT,()=>{
+        console.log(`listening to ${PORT} i'm ready`)
+        
+    });
+})
