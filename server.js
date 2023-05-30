@@ -1,5 +1,4 @@
 'use strict';
-
 const express = require('express');
 const server = express();
 const cors = require('cors');
@@ -29,7 +28,7 @@ server.get('/getCalendarDate/:username/:date', getCalendarDateByUsernameAndDateH
 
 
 server.get("*", defaultHandler)
-server.use(errorHandler)
+// server.use(errorHandler)
 
 function homeHandler(req, res) {
     try {
@@ -42,18 +41,9 @@ function homeHandler(req, res) {
 }
 function randomTask(req, res) {
     const { type } = req.params
-    const url = process.env.API_URL + `?type=${type}`;
+    const url = `http://www.boredapi.com/api/activity?type=${type}`
     try {
         axios.get(url)
-
-
-        .then(result=>{
-            res.send(result.data)
-          
-        })
-        .catch((error)=>{
-            errorHandler(error,req,res)
-        })
 
             .then(result => {
 
@@ -62,7 +52,6 @@ function randomTask(req, res) {
             .catch((error) => {
                 errorHandler(error, req, res)
             })
-
     }
     catch (error) {
         errorHandler(error, req, res)
@@ -71,12 +60,12 @@ function randomTask(req, res) {
 
 
 
+
 function getTasksHandler(req, res) {
     const { username } = req.query;
     const sql = `SELECT * FROM gentasks WHERE username = '${username}';`;
     client.query(sql)
         .then(data => {
-            console.log(data.rows);
             res.send(data.rows);
         })
         .catch((error) => {
@@ -91,7 +80,7 @@ function addTasksHandler(req, res) {
     const Values = [taskValues.username,taskValues.task_type, taskValues.due_date, taskValues.activity, taskValues.comments, taskValues.is_completed];
     client.query(sql, Values)
         .then(data => {
-          res.send(data)
+          res.send("data Added successfully")
           
         })
         .catch((error) => {
@@ -163,7 +152,6 @@ function updateGentasks(req, res) {
         })
 }
 function deleteTask(req, res) {
-    console.log("Task deleted");
     const { id } = req.params;
     const sql = `DELETE FROM gentasks WHERE id=${id}`
     client.query(sql)
@@ -172,6 +160,8 @@ function deleteTask(req, res) {
             client.query(sql)
                 .then(allData => {
                     res.send(allData.rows)
+                    console.log("Task deleted");
+
                 })
 
         })
@@ -219,13 +209,14 @@ const status404 = {
 function defaultHandler(req, res) {
     res.status(404).send(status404);
 };
-function errorHandler(error, req, res) {
+function errorHandler(error, req, res, next) {
     const err = {
-        "status": 500,
-        "message": error
-    }
+      status: 500,
+      message: error.message
+    };
     res.status(500).send(err);
-};
+  }
+server.use(errorHandler);
 
 client.connect()
 .then(()=>{
@@ -233,4 +224,5 @@ client.connect()
         console.log(`listening to ${PORT} i'm ready`)
         
     });
+
 })
