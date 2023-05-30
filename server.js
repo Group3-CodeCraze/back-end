@@ -22,8 +22,12 @@ server.post('/addtask', addTasksHandler)
 server.get('/randomTask/:type', randomTask);
 server.post('/login', loginHandler)
 server.post('/signup', signUpHandler)
-server.put('/updateGenTasks/:id', updateGentasks);
+server.put('/updategentasks/:id', updategentasks);
 server.delete('/deleteTask/:id', deleteTask);
+server.get('/getCalendarDate/:username', getCalendarDateByUsernameHandler);
+server.get('/getCalendarDate/:username/:date', getCalendarDateByUsernameAndDateHandler);
+
+
 
 
 
@@ -61,9 +65,11 @@ function randomTask(req, res) {
 
 
 function getTasksHandler(req, res) {
-    const sql = "SELECT * FROM GenTasks;";
+    const { username } = req.query;
+    const sql = `SELECT * FROM gentasks WHERE username = '${username}';`;
     client.query(sql)
         .then(data => {
+            console.log(data.rows);
             res.send(data.rows);
         })
         .catch((error) => {
@@ -73,9 +79,9 @@ function getTasksHandler(req, res) {
 
 function addTasksHandler(req, res) {
     const taskValues = req.body;
-    const sql = `INSERT INTO GenTasks (task_type,due_date,activity,comments,is_completed)
-        VALUES ($1,$2,$3,$4,$5);`;
-    const Values = [taskValues.task_type, taskValues.due_date, taskValues.activity, taskValues.comments, taskValues.is_completed];
+    const sql = `INSERT INTO gentasks (username,task_type,due_date,activity,comments,is_completed)
+        VALUES ($1,$2,$3,$4,$5,$6);`;
+    const Values = [taskValues.username,taskValues.task_type, taskValues.due_date, taskValues.activity, taskValues.comments, taskValues.is_completed];
     client.query(sql, Values)
         .then(data => {
             res.send("Data Added Successfully");
@@ -129,7 +135,7 @@ function signUpHandler(req, res) {
         })
 
 }
-function updateGentasks(req, res) {
+function updategentasks(req, res) {
     const { id } = req.params;
     const sql = `UPDATE gentasks SET task_type = $1, due_date = $2, activity = $3, comments = $4, is_completed = $5 WHERE id=${id};`
 
@@ -188,6 +194,36 @@ function deleteTask(req, res) {
         })
 }
  */
+function getCalendarDateByUsernameHandler(req, res) {
+    const { username } = req.params;
+  
+    const sql = `SELECT * FROM gentasks WHERE username = $1;`;
+    const values = [username];
+  
+    client.query(sql, values)
+      .then((data) => {
+        res.send(data.rows);
+      })
+      .catch((error) => {
+        errorHandler(error, req, res);
+      });
+  }
+  
+  // Handler for /getCalendarDate/:username/:date
+  function getCalendarDateByUsernameAndDateHandler(req, res) {
+    const { username, date } = req.params;
+  
+    const sql = `SELECT * FROM gentasks WHERE username = $1 AND due_date = $2;`;
+    const values = [username, date];
+  
+    client.query(sql, values)
+      .then((data) => {
+        res.send(data.rows);
+      })
+      .catch((error) => {
+        errorHandler(error, req, res);
+      });
+  }
 const status404 = {
     "status": 404,
     "responseText": "Sorry, page not found error"
