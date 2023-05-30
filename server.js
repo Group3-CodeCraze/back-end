@@ -22,15 +22,10 @@ server.post('/addtask', addTasksHandler)
 server.get('/randomTask/:type', randomTask);
 server.post('/login', loginHandler)
 server.post('/signup', signUpHandler)
-server.put('/updateGenTasks/:id', updateGentasks);
-server.put('/updateiscomplete/:id', updateIsCompletedHandler);
-server.put('/updategentasks/:id', updategentasks);
+server.put('/updateGenTasks/:id',updateGentasks);
 server.delete('/deleteTask/:id', deleteTask);
 server.get('/getCalendarDate/:username', getCalendarDateByUsernameHandler);
 server.get('/getCalendarDate/:username/:date', getCalendarDateByUsernameAndDateHandler);
-
-
-
 
 
 server.get("*", defaultHandler)
@@ -148,7 +143,7 @@ function signUpHandler(req, res) {
         })
 
 }
-function updategentasks(req, res) {
+function updateGentasks(req, res) {
     const { id } = req.params;
     const sql = `UPDATE gentasks SET username=$1 ,task_type = $2, due_date = $3, activity = $4, comments = $5 , is_completed = $6 WHERE id=${id};`
 
@@ -167,74 +162,25 @@ function updategentasks(req, res) {
             errorHandler(error, req, res)
         })
 }
-
-function updateIsCompletedHandler(req, res) {
-    const { id } = req.params;
-    const sql = `UPDATE gentasks SET is_completed = $1 WHERE id=${id};`
-
-    const {  is_completed } = req.body;
-    const values = [  is_completed ];
-
-    client.query(sql, values)
-        .then((data) => {
-            const sql = `SELECT * FROM gentasks;`;
-            client.query(sql)
-                .then(allData => {
-                    res.status(200).send(allData.rows)
-                })
-        })
-        .catch((error) => {
-            errorHandler(error, req, res)
-        })
-}
-
-
-
 function deleteTask(req, res) {
     console.log("Task deleted");
     const { id } = req.params;
     const sql = `DELETE FROM gentasks WHERE id=${id}`
     client.query(sql)
         .then((data) => {
-
-            res.send("ok")
-            // const sql = `SELECT * FROM gentasks;`;
-            // client.query(sql)
-            //     .then(allData => {
-            //         res.send(allData.rows)
-            //     })
-
-        })
-        .catch((error) => {
-            errorHandler(error, req, res)
-        })
-
-}
-/* function updateTasks(req, res) {
-    const { id } = req.params;
-    const sql = `UPDATE tasks SET content = $1 is_completed = $2 WHERE id=${id};`
-
-    const { content, is_completed } = req.body;
-    const values = [content, is_completed];
-
-    client.query(sql, values)
-        .then((data) => {
-            const sql = `SELECT * FROM tasks;`;
+            const sql = `SELECT * FROM gentasks;`;
             client.query(sql)
                 .then(allData => {
-                    res.status(200).send(allData.rows)
+                    res.send(allData.rows)
                 })
-
-
-
-
 
         })
         .catch((error) => {
             errorHandler(error, req, res)
         })
+
 }
- */
+
 function getCalendarDateByUsernameHandler(req, res) {
     const { username } = req.params;
   
