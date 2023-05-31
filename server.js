@@ -21,7 +21,8 @@ server.post('/addtask', addTasksHandler)
 server.get('/randomTask/:type', randomTask);
 server.post('/login', loginHandler)
 server.post('/signup', signUpHandler)
-server.put('/updateGenTasks/:id',updateGentasks);
+server.put(`/updateGenTasks/:id`,updateGentasks);
+server.put('/updateTask/:id',updateTaskHandler);
 server.delete('/deleteTask/:id', deleteTask);
 server.get('/getCalendarDate/:username', getCalendarDateByUsernameHandler);
 server.get('/getCalendarDate/:username/:date', getCalendarDateByUsernameAndDateHandler);
@@ -62,16 +63,18 @@ function randomTask(req, res) {
 
 
 function getTasksHandler(req, res) {
-    const { username } = req.query;
-    const sql = `SELECT * FROM gentasks WHERE username = '${username}';`;
-    client.query(sql)
-        .then(data => {
-            res.send(data.rows);
-        })
-        .catch((error) => {
-            errorHandler(error, req, res);
-        })
-}
+    const { username, search } = req.query;
+    const sql = `SELECT * FROM gentasks WHERE username = $1 AND activity ILIKE $2;`;
+    const values = [username, `%${search}%`]; // Use ILIKE for case-insensitive search
+  
+    client.query(sql, values)
+      .then(data => {
+        res.send(data.rows);
+      })
+      .catch((error) => {
+        errorHandler(error, req, res);
+      });
+  }
 
 function addTasksHandler(req, res) {
     const taskValues = req.body;
@@ -131,6 +134,25 @@ function signUpHandler(req, res) {
             console.log(error);
         })
 
+}
+function updateTaskHandler (req,res) {
+    const { id } = req.params;
+    const sql = `UPDATE gentasks SET task_type = $1, due_date = $2, activity = $3, comments = $4 , is_completed = $5 WHERE id=${id};`
+
+    const { task_type, due_date, activity, comments, is_completed,  } = req.body;
+    const values = [ task_type, due_date, activity, comments, is_completed, ];
+
+    client.query(sql, values)
+        .then((data) => {
+            const sql = `SELECT * FROM gentasks;`;
+            client.query(sql)
+                .then(allData => {
+                    res.status(200).send(allData.rows)
+                })
+        })
+        .catch((error) => {
+            errorHandler(error, req, res)
+        })
 }
 function updateGentasks(req, res) {
     const { id } = req.params;
